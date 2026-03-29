@@ -74,3 +74,5 @@ npm run dev
 - All AI steps are mocked intentionally.
 - Uploaded videos are stored in `backend-express/uploads/`.
 - Job metadata is stored in a local JSON file for simplicity.
+
+Thanks!
