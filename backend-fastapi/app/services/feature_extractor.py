@@ -31,10 +31,7 @@ async def enrich_segments(segments: List[dict]) -> List[dict]:
 
         enriched_segments.append(
             {
-                "start": segment["start"],
-                "end": segment["end"],
-                "load": segment["load"],
-                "attention": segment["attention"],
+                **segment,
                 "issue": issue,
                 "suggestion": suggestion,
                 "tribe_source": segment.get("tribe_source"),

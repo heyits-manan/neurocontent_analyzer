@@ -7,6 +7,9 @@ from app.services.llm_service import enrich_with_llm_feedback, generate_summary
 from app.services.segmentation import create_segments
 from app.services.transcription import transcribe_audio
 from app.services.tribe_service import score_segments
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 async def run_analysis_pipeline(video_path: str) -> AnalyzeResponse:
@@ -15,13 +18,26 @@ async def run_analysis_pipeline(video_path: str) -> AnalyzeResponse:
     if not resolved_path.exists():
         raise FileNotFoundError(f"Video file does not exist at path: {video_path}")
 
+    logger.info(f"Starting pipeline for video: {video_path}")
     audio_path = await extract_audio(resolved_path)
+    logger.info(f"Audio extracted to: {audio_path}")
+    
     transcript = await transcribe_audio(audio_path)
+    logger.info(f"Transcription complete: {len(transcript)} segments")
+    
     segments = await create_segments(transcript)
-    tribe_segments = await score_segments(resolved_path, segments)
+    logger.info(f"Segmentation complete: {len(segments)} blocks")
+    
+    tribe_segments = await score_segments(segments)
     heuristic_segments = await enrich_segments(tribe_segments)
+    
+    logger.info("Enriching segments with LLM feedback")
     enriched_segments = await enrich_with_llm_feedback(heuristic_segments)
+    
+    logger.info("Generating LLM summary")
     summary = await generate_summary(enriched_segments)
+    
+    logger.info("Pipeline complete")
 
     return AnalyzeResponse(
         video_path=str(resolved_path),

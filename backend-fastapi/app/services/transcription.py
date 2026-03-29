@@ -14,6 +14,7 @@ def get_whisper_model() -> WhisperModel:
     if _whisper_model is None:
         settings = get_settings()
         print(f"Using device: {settings.whisper_device}")
+        print(f"Using gemini model: {settings.gemini_model}")
         _whisper_model = WhisperModel(
             settings.whisper_model_size,
             device=settings.whisper_device,
