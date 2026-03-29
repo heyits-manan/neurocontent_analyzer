@@ -4,8 +4,11 @@ from typing import List
 
 from pydantic import BaseModel, Field
 import requests
+import logging
 
 from app.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 class SegmentFeedback(BaseModel):
@@ -52,13 +55,19 @@ Diagnostics:
 Keep the feedback concise, practical, and written for a course creator.
 """.strip()
 
-    response_text = _call_gemini(
-        api_key=settings.gemini_api_key,
-        model=settings.gemini_model,
-        prompt=prompt,
-        response_schema=SegmentFeedback.model_json_schema(),
-    )
-    return SegmentFeedback.model_validate_json(response_text)
+    logger.info(f"Generating feedback for segment {segment['start']}-{segment['end']} using Gemini")
+    try:
+        response_text = _call_gemini(
+            api_key=settings.gemini_api_key,
+            model=settings.gemini_model,
+            prompt=prompt,
+            response_schema=SegmentFeedback.model_json_schema(),
+        )
+        logger.debug(f"Gemini feedback response: {response_text}")
+        return SegmentFeedback.model_validate_json(response_text)
+    except Exception as e:
+        logger.exception(f"Failed to generate feedback for segment {segment['start']}-{segment['end']}")
+        raise
 
 
 async def enrich_with_llm_feedback(segments: List[dict]) -> List[dict]:
@@ -102,11 +111,18 @@ def _generate_summary_with_gemini(segments: List[dict]) -> str:
         ]
     )
 
-    return _call_gemini(
-        api_key=settings.gemini_api_key,
-        model=settings.gemini_model,
-        prompt="\n".join(prompt_lines),
-    ).strip()
+    logger.info("Generating overall summary with Gemini")
+    try:
+        summary = _call_gemini(
+            api_key=settings.gemini_api_key,
+            model=settings.gemini_model,
+            prompt="\n".join(prompt_lines),
+        ).strip()
+        logger.debug(f"Gemini summary response: {summary}")
+        return summary
+    except Exception as e:
+        logger.exception("Failed to generate summary with Gemini")
+        raise
 
 
 def _generate_fallback_summary(segments: List[dict]) -> str:
@@ -150,6 +166,7 @@ def _call_gemini(
             "responseJsonSchema": response_schema,
         }
 
+    logger.debug(f"Sending request to Gemini API ({model})")
     response = requests.post(
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
         headers={
@@ -159,7 +176,12 @@ def _call_gemini(
         data=json.dumps(payload),
         timeout=60,
     )
-    response.raise_for_status()
+    
+    if not response.ok:
+        logger.error(f"Gemini API returned {response.status_code}")
+        logger.error(f"Response body: {response.text}")
+        response.raise_for_status()
+        
     response_payload = response.json()
 
     return response_payload["candidates"][0]["content"]["parts"][0]["text"]

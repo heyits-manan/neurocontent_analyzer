@@ -13,5 +13,7 @@ async def analyze_video(payload: AnalyzeRequest):
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
+        import logging
+        logging.getLogger(__name__).exception("Analysis pipeline failed with unhandled exception")
         raise HTTPException(status_code=500, detail="Analysis pipeline failed") from exc
 
