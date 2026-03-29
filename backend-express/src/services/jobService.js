@@ -12,7 +12,9 @@ const createJob = async ({ filename, originalName, mimetype, size, videoPath }) 
     mimetype,
     size,
     videoPath,
+    audioPath: null,
     status: "uploaded",
+    transcript: [],
     results: null,
     error: null,
     createdAt: new Date().toISOString(),
@@ -50,4 +52,3 @@ module.exports = {
   getJobById,
   updateJob
 };
-

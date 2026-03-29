@@ -19,7 +19,10 @@ const processJob = async (req, res, next) => {
 
     const updatedJob = await updateJob(jobId, {
       status: "completed",
+      audioPath: analysis.audio_path || null,
+      transcript: analysis.transcript || [],
       results: analysis,
+      error: null,
       processedAt: new Date().toISOString()
     });
 
@@ -28,6 +31,8 @@ const processJob = async (req, res, next) => {
       data: {
         job_id: updatedJob.id,
         status: updatedJob.status,
+        audio_path: updatedJob.audioPath,
+        transcript: updatedJob.transcript,
         results: updatedJob.results
       }
     });
@@ -56,6 +61,8 @@ const getResults = async (req, res, next) => {
       data: {
         job_id: job.id,
         status: job.status,
+        audio_path: job.audioPath || null,
+        transcript: job.transcript || [],
         results: job.results || { segments: [] },
         error: job.error || null
       }
@@ -69,4 +76,3 @@ module.exports = {
   processJob,
   getResults
 };
-

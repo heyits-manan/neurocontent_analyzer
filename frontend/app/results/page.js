@@ -53,10 +53,33 @@ export default async function ResultsPage({ searchParams }) {
             <div className="result-card">
               <div className="pill">Job ID: {resultData.job_id}</div>
               <div className="pill">Status: {resultData.status}</div>
+              {resultData.audio_path ? (
+                <div className="pill">Audio extracted</div>
+              ) : null}
               <p className="summary">
                 {resultData.results?.summary || "No summary available yet."}
               </p>
             </div>
+          </div>
+
+          <div className="card result-card">
+            <div className="result-meta">
+              <span className="pill">
+                Transcript Segments: {(resultData.transcript || []).length}
+              </span>
+            </div>
+            {(resultData.transcript || []).length > 0 ? (
+              (resultData.transcript || []).map((segment, index) => (
+                <div key={`${segment.start}-${segment.end}-${index}`}>
+                  <strong>
+                    {segment.start}s - {segment.end}s
+                  </strong>
+                  <p className="summary">{segment.text}</p>
+                </div>
+              ))
+            ) : (
+              <p className="summary">Transcript is not available for this job yet.</p>
+            )}
           </div>
 
           {(resultData.results?.segments || []).map((segment) => (
