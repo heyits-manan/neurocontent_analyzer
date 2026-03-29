@@ -18,7 +18,7 @@ async def run_analysis_pipeline(video_path: str) -> AnalyzeResponse:
     audio_path = await extract_audio(resolved_path)
     transcript = await transcribe_audio(audio_path)
     segments = await create_segments(transcript)
-    tribe_segments = await score_segments(segments)
+    tribe_segments = await score_segments(resolved_path, segments)
     heuristic_segments = await enrich_segments(tribe_segments)
     enriched_segments = await enrich_with_llm_feedback(heuristic_segments)
     summary = await generate_summary(enriched_segments)

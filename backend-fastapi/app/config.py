@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     whisper_model_size: str = "small"
     whisper_compute_type: str = "int8"
     whisper_device: str = "cpu"
+    tribe_enabled: bool = True
+    tribe_model_id: str = "facebook/tribev2"
+    tribe_cache_dir: str = "./cache"
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
 
