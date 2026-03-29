@@ -1,9 +1,9 @@
 import asyncio
-import os
 from pathlib import Path
 
 from faster_whisper import WhisperModel
 
+from app.config import get_settings
 
 _whisper_model = None
 
@@ -12,10 +12,13 @@ def get_whisper_model() -> WhisperModel:
     global _whisper_model
 
     if _whisper_model is None:
-        model_size = os.getenv("WHISPER_MODEL_SIZE", "small")
-        device = os.getenv("WHISPER_DEVICE", "auto")
-        compute_type = os.getenv("WHISPER_COMPUTE_TYPE", "int8")
-        _whisper_model = WhisperModel(model_size, device=device, compute_type=compute_type)
+        settings = get_settings()
+        print(f"Using device: {settings.whisper_device}")
+        _whisper_model = WhisperModel(
+            settings.whisper_model_size,
+            device=settings.whisper_device,
+            compute_type=settings.whisper_compute_type,
+        )
 
     return _whisper_model
 
