@@ -1,24 +1,21 @@
 from typing import List
 
 
-async def create_segments(transcript: str) -> List[dict]:
-    transcript_parts = [
-        "The opening introduces too many ideas at once.",
-        "The middle section uses examples but pacing is inconsistent.",
-        "The closing summary is concise but misses a memorable recap.",
-    ]
-
-    segments = []
-    for index, content in enumerate(transcript_parts):
-        start = index * 10
-        end = start + 10
-        segments.append(
+async def create_segments(transcript_segments: List[dict]) -> List[dict]:
+    if transcript_segments:
+        return [
             {
-                "start": start,
-                "end": end,
-                "text": f"{content} Source transcript: {transcript}",
+                "start": int(segment["start"]),
+                "end": max(int(segment["end"]), int(segment["start"]) + 1),
+                "text": segment["text"],
             }
-        )
+            for segment in transcript_segments
+        ]
 
-    return segments
-
+    return [
+        {
+            "start": 0,
+            "end": 10,
+            "text": "No transcription segments were produced.",
+        }
+    ]

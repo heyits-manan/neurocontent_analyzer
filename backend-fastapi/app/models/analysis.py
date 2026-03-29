@@ -7,6 +7,12 @@ class AnalyzeRequest(BaseModel):
     video_path: str = Field(..., min_length=1)
 
 
+class TranscriptSegment(BaseModel):
+    text: str
+    start: float
+    end: float
+
+
 class SegmentAnalysis(BaseModel):
     start: int
     end: int
@@ -18,7 +24,7 @@ class SegmentAnalysis(BaseModel):
 
 class AnalyzeResponse(BaseModel):
     video_path: str
-    transcript: str
+    audio_path: str
+    transcript: List[TranscriptSegment]
     segments: List[SegmentAnalysis]
     summary: str
-

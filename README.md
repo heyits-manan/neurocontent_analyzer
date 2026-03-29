@@ -32,6 +32,12 @@ cp .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 
+Whisper prerequisites:
+
+- Install `ffmpeg` and ensure it is available on your `PATH`.
+- The first transcription run will download the selected Whisper model.
+- Default model config is controlled through `backend-fastapi/.env`.
+
 ### 2. Backend Express
 
 ```bash
@@ -68,4 +74,3 @@ npm run dev
 - All AI steps are mocked intentionally.
 - Uploaded videos are stored in `backend-express/uploads/`.
 - Job metadata is stored in a local JSON file for simplicity.
-
