@@ -1,11 +1,17 @@
-const { v4: uuidv4 } = require("uuid");
+import { v4 as uuidv4 } from "uuid";
+import { readJobs, writeJobs } from "../utils/storage";
+import { Job, CreateJobInput } from "../types";
 
-const { readJobs, writeJobs } = require("../utils/storage");
-
-const createJob = async ({ filename, originalName, mimetype, size, videoPath }) => {
+export const createJob = async ({
+  filename,
+  originalName,
+  mimetype,
+  size,
+  videoPath,
+}: CreateJobInput): Promise<Job> => {
   const jobs = await readJobs();
 
-  const job = {
+  const job: Job = {
     id: uuidv4(),
     filename,
     originalName,
@@ -18,7 +24,7 @@ const createJob = async ({ filename, originalName, mimetype, size, videoPath }) 
     results: null,
     error: null,
     createdAt: new Date().toISOString(),
-    processedAt: null
+    processedAt: null,
   };
 
   jobs[job.id] = job;
@@ -26,12 +32,15 @@ const createJob = async ({ filename, originalName, mimetype, size, videoPath }) 
   return job;
 };
 
-const getJobById = async (jobId) => {
+export const getJobById = async (jobId: string): Promise<Job | null> => {
   const jobs = await readJobs();
   return jobs[jobId] || null;
 };
 
-const updateJob = async (jobId, updates) => {
+export const updateJob = async (
+  jobId: string,
+  updates: Partial<Job>
+): Promise<Job | null> => {
   const jobs = await readJobs();
 
   if (!jobs[jobId]) {
@@ -40,15 +49,9 @@ const updateJob = async (jobId, updates) => {
 
   jobs[jobId] = {
     ...jobs[jobId],
-    ...updates
+    ...updates,
   };
 
   await writeJobs(jobs);
   return jobs[jobId];
-};
-
-module.exports = {
-  createJob,
-  getJobById,
-  updateJob
 };

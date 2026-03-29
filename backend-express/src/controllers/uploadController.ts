@@ -1,7 +1,12 @@
-const { createJob } = require("../services/jobService");
-const { AppError } = require("../utils/AppError");
+import { Request, Response, NextFunction } from "express";
+import { createJob } from "../services/jobService";
+import { AppError } from "../utils/AppError";
 
-const uploadVideo = async (req, res, next) => {
+export const uploadVideo = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     if (!req.file) {
       throw new AppError("Video file is required", 400);
@@ -12,23 +17,18 @@ const uploadVideo = async (req, res, next) => {
       originalName: req.file.originalname,
       mimetype: req.file.mimetype,
       size: req.file.size,
-      videoPath: req.file.path
+      videoPath: req.file.path,
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       data: {
         job_id: job.id,
         status: job.status,
-        file_name: job.originalName
-      }
+        file_name: job.originalName,
+      },
     });
   } catch (error) {
-    return next(error);
+    next(error);
   }
 };
-
-module.exports = {
-  uploadVideo
-};
-

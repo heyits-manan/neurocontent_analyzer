@@ -1,10 +1,11 @@
-const fs = require("fs/promises");
-const path = require("path");
+import fs from "fs/promises";
+import path from "path";
+import { JobStore } from "../types";
 
 const dataDirectory = path.resolve(process.cwd(), "src/data");
 const jobsFilePath = path.join(dataDirectory, "jobs.json");
 
-const ensureStorage = async () => {
+export const ensureStorage = async (): Promise<void> => {
   await fs.mkdir(dataDirectory, { recursive: true });
 
   try {
@@ -14,20 +15,13 @@ const ensureStorage = async () => {
   }
 };
 
-const readJobs = async () => {
+export const readJobs = async (): Promise<JobStore> => {
   await ensureStorage();
   const data = await fs.readFile(jobsFilePath, "utf-8");
-  return JSON.parse(data);
+  return JSON.parse(data) as JobStore;
 };
 
-const writeJobs = async (jobs) => {
+export const writeJobs = async (jobs: JobStore): Promise<void> => {
   await ensureStorage();
   await fs.writeFile(jobsFilePath, JSON.stringify(jobs, null, 2), "utf-8");
 };
-
-module.exports = {
-  ensureStorage,
-  readJobs,
-  writeJobs
-};
-

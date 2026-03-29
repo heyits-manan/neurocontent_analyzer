@@ -1,7 +1,6 @@
-require("dotenv").config();
-
-const app = require("./app");
-const { ensureStorage } = require("./utils/storage");
+import "dotenv/config";
+import app from "./app";
+import { ensureStorage } from "./utils/storage";
 
 const port = process.env.PORT || 5001;
 
@@ -17,4 +16,3 @@ startServer().catch((error) => {
   console.error("Failed to start Express backend", error);
   process.exit(1);
 });
-
