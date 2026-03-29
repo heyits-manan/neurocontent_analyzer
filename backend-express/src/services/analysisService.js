@@ -9,8 +9,8 @@ const analyzeVideo = async (videoPath) => {
       `${fastApiUrl}/analyze`,
       { video_path: videoPath },
       {
-        timeout: 30000
-      }
+        timeout: 300000,
+      },
     );
 
     return response.data;
@@ -25,6 +25,5 @@ const analyzeVideo = async (videoPath) => {
 };
 
 module.exports = {
-  analyzeVideo
+  analyzeVideo,
 };
-
