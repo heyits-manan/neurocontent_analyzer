@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     whisper_model_size: str = "small"
     whisper_compute_type: str = "int8"
     whisper_device: str = "cpu"
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parent.parent / ".env",

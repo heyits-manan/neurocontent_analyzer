@@ -16,7 +16,7 @@ neuro-analyzer/
 1. The frontend uploads a video to the Express backend.
 2. Express stores the file locally, creates a job, and exposes job/result APIs.
 3. Express calls the FastAPI service over HTTP for analysis.
-4. FastAPI returns mocked segment analysis.
+4. FastAPI extracts audio, transcribes with Whisper, and generates segment feedback.
 5. The frontend renders the processing result list.
 
 ## Setup
@@ -37,6 +37,7 @@ Whisper prerequisites:
 - Install `ffmpeg` and ensure it is available on your `PATH`.
 - The first transcription run will download the selected Whisper model.
 - Default model config is controlled through `backend-fastapi/.env`.
+- To enable Gemini-based segment recommendations, set `GEMINI_API_KEY` in `backend-fastapi/.env`.
 
 ### 2. Backend Express
 
@@ -67,11 +68,10 @@ npm run dev
 1. Open the home page.
 2. Upload a video file.
 3. Click `Process Analysis`.
-4. View the results page for segment issues and suggestions.
+4. View the results page for transcript segments, issues, and suggestions.
 
 ## Notes
 
-- All AI steps are mocked intentionally.
+- Whisper transcription is real; the diagnostic pipeline is heuristic and Gemini feedback is enabled when `GEMINI_API_KEY` is set.
 - Uploaded videos are stored in `backend-express/uploads/`.
 - Job metadata is stored in a local JSON file for simplicity.
-

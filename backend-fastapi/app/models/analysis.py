@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -20,6 +20,8 @@ class SegmentAnalysis(BaseModel):
     attention: str
     issue: str
     suggestion: str
+    reason: Optional[str] = None
+    rewrite: Optional[str] = None
 
 
 class AnalyzeResponse(BaseModel):

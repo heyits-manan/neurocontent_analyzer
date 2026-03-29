@@ -95,10 +95,22 @@ export default async function ResultsPage({ searchParams }) {
                 <strong>Issue</strong>
                 <p className="summary">{segment.issue}</p>
               </div>
+              {segment.reason ? (
+                <div>
+                  <strong>Why It Matters</strong>
+                  <p className="summary">{segment.reason}</p>
+                </div>
+              ) : null}
               <div>
                 <strong>Suggestion</strong>
                 <p className="summary">{segment.suggestion}</p>
               </div>
+              {segment.rewrite ? (
+                <div>
+                  <strong>Rewrite Direction</strong>
+                  <p className="summary">{segment.rewrite}</p>
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
