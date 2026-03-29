@@ -149,9 +149,12 @@ def _get_tribe_model():
         return _tribe_model
 
     try:
-        from tribev2 import TribeModel
+        from tribev2.demo_utils import TribeModel
     except ImportError:
-        return None
+        try:
+            from tribev2 import TribeModel
+        except ImportError:
+            return None
 
     settings = get_settings()
     _tribe_model = TribeModel.from_pretrained(
