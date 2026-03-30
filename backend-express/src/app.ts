@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
+import path from "path";
 
 import uploadRoutes from "./routes/uploadRoutes";
 import jobRoutes from "./routes/jobRoutes";
@@ -24,6 +25,8 @@ app.get("/health", async (_req, res) => {
 
 app.use("/", uploadRoutes);
 app.use("/", jobRoutes);
+
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use(notFoundHandler);
 app.use(errorHandler);

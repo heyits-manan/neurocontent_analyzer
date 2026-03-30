@@ -2,17 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
 import { processVideo, uploadVideo } from "../lib/api";
 
 export default function UploadForm() {
   const router = useRouter();
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [jobId, setJobId] = useState("");
-  const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [jobId, setJobId] = useState<string>("");
+  const [status, setStatus] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -27,8 +26,8 @@ export default function UploadForm() {
       const uploadResponse = await uploadVideo(selectedFile);
       setJobId(uploadResponse.job_id);
       setStatus(`Upload complete. Job created: ${uploadResponse.job_id}`);
-    } catch (uploadError) {
-      setError(uploadError.message);
+    } catch (uploadError: any) {
+      setError(uploadError.message || "Upload error");
     } finally {
       setIsUploading(false);
     }
@@ -47,8 +46,8 @@ export default function UploadForm() {
       await processVideo(jobId);
       setStatus("Processing complete. Redirecting to results...");
       router.push(`/results?jobId=${jobId}`);
-    } catch (processError) {
-      setError(processError.message);
+    } catch (processError: any) {
+      setError(processError.message || "Processing error");
     } finally {
       setIsProcessing(false);
     }
@@ -97,4 +96,3 @@ export default function UploadForm() {
     </div>
   );
 }
-

@@ -1,10 +1,13 @@
 import Link from "next/link";
-
+import InteractiveViewer from "../../components/InteractiveViewer";
 import { getResults } from "../../lib/api";
+import { JobResponse, TranscriptSegment, SegmentAnalysis } from "../../lib/types";
 
-export default async function ResultsPage({ searchParams }) {
-  const resolvedSearchParams = await searchParams;
-  const jobId = resolvedSearchParams?.jobId;
+export default async function ResultsPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const jobId = searchParams?.jobId as string | undefined;
 
   if (!jobId) {
     return (
@@ -19,12 +22,12 @@ export default async function ResultsPage({ searchParams }) {
     );
   }
 
-  let resultData;
+  let resultData: JobResponse | null = null;
   let errorMessage = "";
 
   try {
     resultData = await getResults(jobId);
-  } catch (error) {
+  } catch (error: any) {
     errorMessage = error.message;
   }
 
@@ -47,7 +50,7 @@ export default async function ResultsPage({ searchParams }) {
 
       {errorMessage ? (
         <div className="card error-box">{errorMessage}</div>
-      ) : (
+      ) : resultData ? (
         <div className="results-grid">
           <div className="card">
             <div className="result-card">
@@ -57,7 +60,7 @@ export default async function ResultsPage({ searchParams }) {
                 <div className="pill">Audio extracted</div>
               ) : null}
               <p className="summary">
-                {resultData.results?.summary || "No summary available yet."}
+                {("summary" in resultData.results) ? resultData.results.summary : "No summary available yet."}
               </p>
             </div>
           </div>
@@ -69,7 +72,7 @@ export default async function ResultsPage({ searchParams }) {
               </span>
             </div>
             {(resultData.transcript || []).length > 0 ? (
-              (resultData.transcript || []).map((segment, index) => (
+              (resultData.transcript || []).map((segment: TranscriptSegment, index: number) => (
                 <div key={`${segment.start}-${segment.end}-${index}`}>
                   <strong>
                     {segment.start}s - {segment.end}s
@@ -82,39 +85,16 @@ export default async function ResultsPage({ searchParams }) {
             )}
           </div>
 
-          {(resultData.results?.segments || []).map((segment) => (
-            <div className="card result-card" key={`${segment.start}-${segment.end}`}>
-              <div className="result-meta">
-                <span className="pill">
-                  Segment {segment.start}s - {segment.end}s
-                </span>
-                <span className="pill">Load: {segment.load}</span>
-                <span className="pill">Attention: {segment.attention}</span>
-              </div>
-              <div>
-                <strong>Issue</strong>
-                <p className="summary">{segment.issue}</p>
-              </div>
-              {segment.reason ? (
-                <div>
-                  <strong>Why It Matters</strong>
-                  <p className="summary">{segment.reason}</p>
-                </div>
-              ) : null}
-              <div>
-                <strong>Suggestion</strong>
-                <p className="summary">{segment.suggestion}</p>
-              </div>
-              {segment.rewrite ? (
-                <div>
-                  <strong>Rewrite Direction</strong>
-                  <p className="summary">{segment.rewrite}</p>
-                </div>
-              ) : null}
-            </div>
-          ))}
+          {resultData.video_filename ? (
+            <InteractiveViewer 
+              videoUrl={`http://localhost:5001/uploads/${resultData.video_filename}`}
+              segments={resultData.results?.segments || []}
+            />
+          ) : (
+            <p className="summary" style={{ marginTop: "2rem" }}>Video not available for interactive playback.</p>
+          )}
         </div>
-      )}
+      ) : null}
     </main>
   );
 }

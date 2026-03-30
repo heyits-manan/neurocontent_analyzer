@@ -1,6 +1,8 @@
+import { JobResponse } from "./types";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
 
-export async function uploadVideo(file) {
+export async function uploadVideo(file: File): Promise<{ job_id: string; status: string }> {
   const formData = new FormData();
   formData.append("video", file);
 
@@ -18,7 +20,7 @@ export async function uploadVideo(file) {
   return payload.data;
 }
 
-export async function processVideo(jobId) {
+export async function processVideo(jobId: string): Promise<JobResponse> {
   const response = await fetch(`${API_BASE_URL}/process/${jobId}`, {
     method: "POST"
   });
@@ -32,9 +34,10 @@ export async function processVideo(jobId) {
   return payload.data;
 }
 
-export async function getResults(jobId) {
+export async function getResults(jobId: string): Promise<JobResponse> {
   const response = await fetch(`${API_BASE_URL}/results/${jobId}`, {
-    cache: "no-store"
+    cache: "no-store",
+    next: { tags: ["results"] }
   });
 
   const payload = await response.json();
@@ -45,4 +48,3 @@ export async function getResults(jobId) {
 
   return payload.data;
 }
-

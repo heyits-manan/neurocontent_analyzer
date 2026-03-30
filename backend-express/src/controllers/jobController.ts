@@ -74,6 +74,7 @@ export const getResults = async (
         job_id: job.id,
         status: job.status,
         audio_path: job.audioPath || null,
+        video_filename: job.filename,
         transcript: job.transcript || [],
         results: job.results || { segments: [] },
         error: job.error || null,
