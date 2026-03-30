@@ -65,30 +65,11 @@ export default async function ResultsPage(props: {
             </div>
           </div>
 
-          <div className="card result-card">
-            <div className="result-meta">
-              <span className="pill">
-                Transcript Segments: {(resultData.transcript || []).length}
-              </span>
-            </div>
-            {(resultData.transcript || []).length > 0 ? (
-              (resultData.transcript || []).map((segment: TranscriptSegment, index: number) => (
-                <div key={`${segment.start}-${segment.end}-${index}`}>
-                  <strong>
-                    {segment.start}s - {segment.end}s
-                  </strong>
-                  <p className="summary">{segment.text}</p>
-                </div>
-              ))
-            ) : (
-              <p className="summary">Transcript is not available for this job yet.</p>
-            )}
-          </div>
-
           {resultData.video_filename ? (
             <InteractiveViewer 
               videoUrl={`http://localhost:5001/uploads/${resultData.video_filename}`}
               segments={resultData.results?.segments || []}
+              transcript={resultData.transcript || []}
             />
           ) : (
             <p className="summary" style={{ marginTop: "2rem" }}>Video not available for interactive playback.</p>

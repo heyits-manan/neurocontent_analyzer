@@ -41,7 +41,7 @@ input {
 }
 
 .page-shell {
-  width: min(980px, calc(100% - 32px));
+  width: min(1200px, calc(100% - 32px));
   margin: 0 auto;
   padding: 48px 0 72px;
 }
@@ -177,6 +177,26 @@ input {
   line-height: 1.7;
 }
 
+.interactive-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 24px;
+  align-items: start;
+}
+
+.sticky-sidebar {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+  .interactive-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
   .page-shell {
     width: min(100% - 20px, 980px);
@@ -188,4 +208,3 @@ input {
     padding: 18px;
   }
 }
-
