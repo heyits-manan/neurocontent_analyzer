@@ -28,7 +28,7 @@ async def run_analysis_pipeline(video_path: str) -> AnalyzeResponse:
     segments = await create_segments(transcript)
     logger.info(f"Segmentation complete: {len(segments)} blocks")
     
-    tribe_segments = await score_segments(segments)
+    tribe_segments = await score_segments(resolved_path, segments)
     heuristic_segments = await enrich_segments(tribe_segments)
     
     logger.info("Enriching segments with LLM feedback")
