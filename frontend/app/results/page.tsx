@@ -11,10 +11,13 @@ export default async function ResultsPage(props: {
 
   if (!jobId) {
     return (
-      <main className="page-shell">
-        <div className="card">
-          <p>Missing job ID. Upload and process a video first.</p>
-          <Link className="button button-secondary" href="/">
+      <main className="mx-auto w-[min(1200px,calc(100%-32px))] pt-12 pb-20">
+        <div className="bg-surface border border-border-card rounded-3xl p-6 md:p-8 shadow-custom backdrop-blur-md">
+          <p className="mb-4">Missing job ID. Upload and process a video first.</p>
+          <Link 
+            className="inline-block border-0 rounded-full px-5 py-3 cursor-pointer transition-all duration-200 hover:-translate-y-[1px] bg-[#ece2d6] text-textbody" 
+            href="/"
+          >
             Back to Home
           </Link>
         </div>
@@ -32,34 +35,41 @@ export default async function ResultsPage(props: {
   }
 
   return (
-    <main className="page-shell">
-      <section className="hero">
-        <span className="eyebrow">Analysis Results</span>
-        <h1>Segment feedback for your uploaded video.</h1>
-        <p>
+    <main className="mx-auto w-[min(1200px,calc(100%-32px))] pt-12 pb-20">
+      <section className="grid gap-3 mb-8">
+        <span className="tracking-[0.12em] uppercase text-accentdark text-sm">Analysis Results</span>
+        <h1 className="m-0 text-[clamp(2.6rem,7vw,5rem)] leading-[0.92] max-w-[10ch]">
+          Segment feedback for your uploaded video.
+        </h1>
+        <p className="m-0 max-w-[60ch] text-muted text-lg leading-relaxed">
           Review the mock output from the Whisper, TRIBE v2, heuristic feature
           extraction, and LLM summary pipeline.
         </p>
       </section>
 
-      <div className="actions" style={{ marginBottom: 18 }}>
-        <Link className="button button-secondary" href="/">
+      <div className="flex gap-3 flex-wrap mb-5">
+        <Link 
+          className="inline-block border-0 rounded-full px-5 py-3 cursor-pointer transition-all duration-200 hover:-translate-y-[1px] bg-[#ece2d6] text-textbody" 
+          href="/"
+        >
           Upload another video
         </Link>
       </div>
 
       {errorMessage ? (
-        <div className="card error-box">{errorMessage}</div>
+        <div className="bg-surface border border-border-card rounded-3xl p-6 md:p-8 shadow-custom backdrop-blur-md rounded-2xl px-4 py-3 bg-[#a436221a] text-[#8a281d]">{errorMessage}</div>
       ) : resultData ? (
-        <div className="results-grid">
-          <div className="card">
-            <div className="result-card">
-              <div className="pill">Job ID: {resultData.job_id}</div>
-              <div className="pill">Status: {resultData.status}</div>
-              {resultData.audio_path ? (
-                <div className="pill">Audio extracted</div>
-              ) : null}
-              <p className="summary">
+        <div className="grid gap-5">
+          <div className="bg-surface border border-border-card rounded-3xl p-6 md:p-8 shadow-custom backdrop-blur-md">
+            <div className="grid gap-3">
+              <div className="flex gap-2 flex-wrap">
+                <div className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Job ID: {resultData.job_id}</div>
+                <div className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Status: {resultData.status}</div>
+                {resultData.audio_path ? (
+                  <div className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Audio extracted</div>
+                ) : null}
+              </div>
+              <p className="text-muted leading-relaxed m-0 mt-2">
                 {("summary" in resultData.results) ? resultData.results.summary : "No summary available yet."}
               </p>
             </div>
@@ -72,7 +82,7 @@ export default async function ResultsPage(props: {
               transcript={resultData.transcript || []}
             />
           ) : (
-            <p className="summary" style={{ marginTop: "2rem" }}>Video not available for interactive playback.</p>
+            <p className="text-muted leading-relaxed mt-8">Video not available for interactive playback.</p>
           )}
         </div>
       ) : null}

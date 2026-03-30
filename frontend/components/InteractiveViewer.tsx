@@ -70,93 +70,78 @@ export default function InteractiveViewer({ videoUrl, segments, transcript }: In
   };
 
   return (
-    <div className="interactive-layout">
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_350px] gap-6 items-start">
       
       {/* LEFT COLUMN: Video & AI Diagnostics Carousel */}
-      <div className="viewer-container">
-        <div className="video-wrapper card" style={{ padding: "0", overflow: "hidden", marginBottom: "2rem" }}>
+      <div className="grid gap-6">
+        <div className="bg-surface border border-border-card rounded-[28px] overflow-hidden mb-2 shadow-custom backdrop-blur-md">
           <video
             ref={videoRef}
             src={videoUrl}
             controls
             onTimeUpdate={handleTimeUpdate}
-            style={{ width: "100%", display: "block", background: "#000", maxHeight: "60vh", objectFit: "contain" }}
+            className="w-full block bg-black max-h-[60vh] object-contain"
           />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-          <h3 style={{ margin: 0 }}>Segment Analysis</h3>
+        <div className="flex justify-between items-center mb-1">
+          <h3 className="m-0 text-xl font-bold">Segment Analysis</h3>
           {segments && segments.length > 0 && (
-            <div style={{ fontSize: "0.9rem", color: "var(--muted)" }}>
+            <div className="text-sm text-muted">
               Analysis {activeSegmentIndex + 1} of {segments.length}
             </div>
           )}
         </div>
 
-        <div className="carousel-container">
+        <div className="grid gap-4">
           {(segments || []).length === 0 ? (
-            <p>No segments available for timeline view.</p>
+            <p className="text-muted leading-relaxed">No segments available for timeline view.</p>
           ) : (
             <div 
-              className="card result-card segment-card active-segment" 
-              style={{
-                border: "2px solid var(--accent)",
-                boxShadow: "var(--shadow)",
-                position: "relative",
-                paddingBottom: "4rem" // Space for bottom controls
-              }}
+              className="bg-surface border-2 border-accent rounded-3xl p-6 md:p-8 shadow-custom backdrop-blur-md relative pb-[4.5rem]" 
             >
               {/* Highlight Pill Row */}
-              <div className="result-meta">
-                <span className="pill" style={{ background: "var(--accent)", color: "#fff" }}>
+              <div className="flex gap-2.5 flex-wrap mb-4">
+                <span className="w-fit px-3 py-1.5 rounded-full bg-accent text-white text-sm">
                   {segments[activeSegmentIndex].start}s - {segments[activeSegmentIndex].end}s
                 </span>
-                <span className="pill">Load: {segments[activeSegmentIndex].load}</span>
-                <span className="pill">Attention: {segments[activeSegmentIndex].attention}</span>
+                <span className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Load: {segments[activeSegmentIndex].load}</span>
+                <span className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Attention: {segments[activeSegmentIndex].attention}</span>
               </div>
 
               {/* Dynamic Content */}
               <div>
-                <strong>Issue: {segments[activeSegmentIndex].issue}</strong>
-                {segments[activeSegmentIndex].reason && <p className="summary" style={{ marginTop: "4px" }}>{segments[activeSegmentIndex].reason}</p>}
+                <strong className="block mb-1">Issue: {segments[activeSegmentIndex].issue}</strong>
+                {segments[activeSegmentIndex].reason && <p className="text-muted leading-relaxed mt-1 text-sm">{segments[activeSegmentIndex].reason}</p>}
               </div>
               
-              <div style={{ marginTop: "12px" }}>
-                <strong>Suggestion</strong>
-                <p className="summary">{segments[activeSegmentIndex].suggestion}</p>
+              <div className="mt-4">
+                <strong className="block mb-1">Suggestion</strong>
+                <p className="text-muted leading-relaxed m-0">{segments[activeSegmentIndex].suggestion}</p>
               </div>
 
               {segments[activeSegmentIndex].rewrite && (
-                <div style={{ marginTop: "12px", padding: "10px", background: "var(--surface-strong)", borderRadius: "6px" }}>
-                  <strong>Try saying this instead:</strong>
-                  <p className="summary" style={{ marginBottom: 0 }}>{segments[activeSegmentIndex].rewrite}</p>
+                <div className="mt-4 p-3 bg-surfacestrong rounded-lg">
+                  <strong className="block mb-1">Try saying this instead:</strong>
+                  <p className="text-muted leading-relaxed m-0">{segments[activeSegmentIndex].rewrite}</p>
                 </div>
               )}
 
               {/* Carousel Navigation Buttons */}
-              <div style={{ 
-                position: "absolute", 
-                bottom: "16px", right: "16px", left: "16px",
-                display: "flex", 
-                justifyContent: "space-between",
-                paddingTop: "12px",
-                borderTop: "1px solid var(--border)"
-              }}>
+              <div className="absolute bottom-4 right-4 left-4 flex justify-between pt-3 border-t border-border-card">
                 <button 
-                  className="button button-secondary"
+                  className="border-0 rounded-full px-4 py-2 cursor-pointer transition-all duration-200 hover:-translate-y-[1px] disabled:opacity-55 disabled:cursor-not-allowed bg-[#ece2d6] text-textbody font-inherit text-sm"
                   onClick={goToPreviousSegment}
                   disabled={activeSegmentIndex === 0}
-                  style={{ padding: "8px 16px", fontSize: "0.9rem" }}
                 >
-                  ← Previous
+                  &larr; Previous
                 </button>
                 <button 
-                  className="button button-primary"
+                  className="border-0 rounded-full px-4 py-2 cursor-pointer transition-all duration-200 hover:-translate-y-[1px] disabled:opacity-55 disabled:cursor-not-allowed bg-accent text-white font-inherit text-sm"
                   onClick={goToNextSegment}
                   disabled={activeSegmentIndex === segments.length - 1}
-                  style={{ padding: "8px 16px", fontSize: "0.9rem" }}
                 >
-                  Next →
+                  Next &rarr;
                 </button>
               </div>
             </div>
@@ -165,14 +150,14 @@ export default function InteractiveViewer({ videoUrl, segments, transcript }: In
       </div>
 
       {/* RIGHT COLUMN: Sticky Transcript List */}
-      <div className="card sticky-sidebar">
-        <div className="result-meta" style={{ marginBottom: "16px" }}>
-          <span className="pill">
+      <div className="bg-surface border border-border-card rounded-3xl p-6 shadow-custom backdrop-blur-md sticky top-6 max-h-[calc(100vh-48px)] overflow-y-auto">
+        <div className="flex gap-2.5 flex-wrap mb-4">
+          <span className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm font-semibold">
             Transcript Segments: {(transcript || []).length}
           </span>
         </div>
         
-        <div ref={transcriptRef} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div ref={transcriptRef} className="flex flex-col gap-3">
           {(transcript || []).length > 0 ? (
             transcript.map((segment: TranscriptSegment, index: number) => {
               const isActive = currentTime >= segment.start && currentTime < segment.end;
@@ -180,28 +165,20 @@ export default function InteractiveViewer({ videoUrl, segments, transcript }: In
               return (
                 <div 
                   key={`ts-${segment.start}-${segment.end}-${index}`}
-                  className={isActive ? "active-transcript" : ""}
+                  className={`${isActive ? "active-transcript bg-accent/10 border-accent" : "bg-transparent border-transparent"} p-3 rounded-xl cursor-pointer border-l-[3px] transition-colors duration-200`}
                   onClick={() => jumpToSegment(segment.start)}
-                  style={{
-                    padding: "12px",
-                    borderRadius: "12px",
-                    cursor: "pointer",
-                    background: isActive ? "rgba(198, 93, 46, 0.1)" : "transparent",
-                    borderLeft: isActive ? "3px solid var(--accent)" : "3px solid transparent",
-                    transition: "background 0.2s ease"
-                  }}
                 >
-                  <strong style={{ display: "block", marginBottom: "4px", fontSize: "0.85rem", color: "var(--muted)" }}>
+                  <strong className="block mb-1 text-[0.85rem] text-muted">
                     {segment.start}s - {segment.end}s
                   </strong>
-                  <p className="summary" style={{ margin: 0, color: isActive ? "var(--text)" : "var(--muted)" }}>
+                  <p className={`m-0 leading-relaxed ${isActive ? "text-textbody" : "text-muted"}`}>
                     {segment.text}
                   </p>
                 </div>
               );
             })
           ) : (
-            <p className="summary">Transcript is not available for this job yet.</p>
+            <p className="text-muted leading-relaxed">Transcript is not available for this job yet.</p>
           )}
         </div>
       </div>

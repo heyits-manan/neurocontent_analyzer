@@ -54,14 +54,14 @@ export default function UploadForm() {
   };
 
   return (
-    <div className="card upload-panel">
+    <div className="bg-surface border border-border-card rounded-3xl p-6 md:p-8 shadow-custom backdrop-blur-md grid gap-4">
       <div>
-        <label htmlFor="video-upload">Upload Video</label>
+        <label htmlFor="video-upload" className="font-semibold">Upload Video</label>
       </div>
 
       <input
         id="video-upload"
-        className="file-input"
+        className="w-full p-4 border border-dashed border-black/20 rounded-[20px] bg-surfacestrong font-inherit cursor-pointer"
         type="file"
         accept="video/*"
         onChange={(event) => {
@@ -70,9 +70,9 @@ export default function UploadForm() {
         }}
       />
 
-      <div className="actions">
+      <div className="flex gap-3 flex-wrap">
         <button
-          className="button button-primary"
+          className="border-0 rounded-full px-5 py-3 cursor-pointer transition-all duration-200 hover:-translate-y-[1px] disabled:opacity-55 disabled:cursor-not-allowed bg-accent text-white font-inherit"
           onClick={handleUpload}
           disabled={isUploading}
           type="button"
@@ -81,7 +81,7 @@ export default function UploadForm() {
         </button>
 
         <button
-          className="button button-secondary"
+          className="border-0 rounded-full px-5 py-3 cursor-pointer transition-all duration-200 hover:-translate-y-[1px] disabled:opacity-55 disabled:cursor-not-allowed bg-[#ece2d6] text-textbody font-inherit"
           onClick={handleProcess}
           disabled={!jobId || isProcessing}
           type="button"
@@ -90,9 +90,9 @@ export default function UploadForm() {
         </button>
       </div>
 
-      {jobId ? <div className="pill">Job ID: {jobId}</div> : null}
-      {status ? <div className="status-box">{status}</div> : null}
-      {error ? <div className="error-box">{error}</div> : null}
+      {jobId ? <div className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Job ID: {jobId}</div> : null}
+      {status ? <div className="rounded-2xl px-4 py-3 bg-[#2f7d5714] text-success leading-relaxed">{status}</div> : null}
+      {error ? <div className="rounded-2xl px-4 py-3 bg-[#a436221a] text-[#8a281d] leading-relaxed">{error}</div> : null}
     </div>
   );
 }
