@@ -31,8 +31,25 @@ export const processJob = async (
     const videoUrl = await getVideoSignedUrl(job.video_storage_path, 3600);
 
     // Fire-and-forget: trigger FastAPI analysis in the background
-    triggerAnalysis(jobId, videoUrl).catch((err) => {
+    triggerAnalysis(jobId, videoUrl).catch(async (err) => {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "FastAPI analysis trigger failed";
+
       console.error(`Background analysis failed for job ${jobId}:`, err);
+
+      try {
+        await updateJob(jobId, {
+          status: "failed",
+          error: `Failed to start analysis: ${message}`,
+        });
+      } catch (updateError) {
+        console.error(
+          `Failed to mark job ${jobId} as failed after trigger error:`,
+          updateError
+        );
+      }
     });
 
     res.json({

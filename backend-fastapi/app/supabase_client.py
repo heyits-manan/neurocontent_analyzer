@@ -1,6 +1,9 @@
 import os
 
+from dotenv import load_dotenv
 from supabase import create_client, Client
+
+load_dotenv()
 
 _supabase_url = os.getenv("SUPABASE_URL", "")
 _supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
