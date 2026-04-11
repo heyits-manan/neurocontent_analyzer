@@ -19,6 +19,9 @@ RUN pip install --no-cache-dir --no-deps "tribev2 @ git+https://github.com/faceb
 # Install remaining dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Provide the `uvx` CLI used by the TRIBE-style WhisperX transcription step
+RUN pip install --no-cache-dir uv
+
 # Copy application code
 COPY . .
 
