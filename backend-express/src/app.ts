@@ -11,8 +11,16 @@ import {
 } from "./middlewares/errorMiddleware";
 
 const app = express();
+const frontendOrigins = (process.env.FRONTEND_ORIGINS || "http://localhost:3000")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(cors());
+app.use(
+  cors({
+    origin: frontendOrigins,
+  })
+);
 app.use(express.json());
 app.use(morgan("dev"));
 

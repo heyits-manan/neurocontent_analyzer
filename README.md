@@ -104,6 +104,7 @@ Typical `.env` values:
 ```env
 PORT=5001
 FASTAPI_URL=http://localhost:8000
+FRONTEND_ORIGINS=http://localhost:3000
 UPLOAD_DIR=uploads
 ```
 
@@ -111,6 +112,7 @@ Express environment variables:
 
 - `PORT`: port used by the Express backend
 - `FASTAPI_URL`: base URL of the FastAPI service that handles AI processing
+- `FRONTEND_ORIGINS`: comma-separated browser origins allowed to call the Express backend
 - `UPLOAD_DIR`: local folder where uploaded videos are stored
 
 ### 3. Frontend
