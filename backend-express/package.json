@@ -4,11 +4,12 @@
   "private": true,
   "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch --ignore uploads --ignore src/data --ignore .env src/server.ts",
+    "dev": "tsx watch --ignore uploads --ignore tmp --ignore src/data --ignore .env src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.103.0",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

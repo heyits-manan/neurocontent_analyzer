@@ -1,27 +1,100 @@
 import fs from "fs/promises";
 import path from "path";
-import { JobStore } from "../types";
+import { supabase, VIDEOS_BUCKET, ARTIFACTS_BUCKET } from "./supabaseClient";
 
-const dataDirectory = path.resolve(process.cwd(), "src/data");
-const jobsFilePath = path.join(dataDirectory, "jobs.json");
+/**
+ * Upload a local file to a Supabase Storage bucket.
+ * Returns the storage path (the key inside the bucket).
+ */
+export const uploadToStorage = async (
+  bucket: string,
+  storagePath: string,
+  localFilePath: string,
+  contentType: string
+): Promise<string> => {
+  const fileBuffer = await fs.readFile(localFilePath);
 
-export const ensureStorage = async (): Promise<void> => {
-  await fs.mkdir(dataDirectory, { recursive: true });
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(storagePath, fileBuffer, {
+      contentType,
+      upsert: false,
+    });
 
+  if (error) {
+    throw new Error(`Supabase Storage upload failed: ${error.message}`);
+  }
+
+  return storagePath;
+};
+
+/**
+ * Generate a short-lived signed URL for a private storage object.
+ */
+export const getSignedUrl = async (
+  bucket: string,
+  storagePath: string,
+  expiresInSeconds: number = 3600
+): Promise<string> => {
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(storagePath, expiresInSeconds);
+
+  if (error || !data?.signedUrl) {
+    throw new Error(
+      `Failed to create signed URL: ${error?.message || "unknown error"}`
+    );
+  }
+
+  return data.signedUrl;
+};
+
+/**
+ * Upload a video file to the videos bucket.
+ */
+export const uploadVideo = async (
+  storagePath: string,
+  localFilePath: string,
+  contentType: string
+): Promise<string> => {
+  return uploadToStorage(VIDEOS_BUCKET, storagePath, localFilePath, contentType);
+};
+
+/**
+ * Get a signed URL for a video in the videos bucket.
+ */
+export const getVideoSignedUrl = async (
+  storagePath: string,
+  expiresInSeconds?: number
+): Promise<string> => {
+  return getSignedUrl(VIDEOS_BUCKET, storagePath, expiresInSeconds);
+};
+
+/**
+ * Get a signed URL for an artifact (e.g. audio) in the artifacts bucket.
+ */
+export const getArtifactSignedUrl = async (
+  storagePath: string,
+  expiresInSeconds?: number
+): Promise<string> => {
+  return getSignedUrl(ARTIFACTS_BUCKET, storagePath, expiresInSeconds);
+};
+
+/**
+ * Delete a local temp file (best-effort, logs but does not throw).
+ */
+export const deleteTempFile = async (filePath: string): Promise<void> => {
   try {
-    await fs.access(jobsFilePath);
-  } catch (_error) {
-    await fs.writeFile(jobsFilePath, JSON.stringify({}, null, 2), "utf-8");
+    await fs.unlink(filePath);
+  } catch (_err) {
+    console.warn(`Could not delete temp file: ${filePath}`);
   }
 };
 
-export const readJobs = async (): Promise<JobStore> => {
-  await ensureStorage();
-  const data = await fs.readFile(jobsFilePath, "utf-8");
-  return JSON.parse(data) as JobStore;
-};
-
-export const writeJobs = async (jobs: JobStore): Promise<void> => {
-  await ensureStorage();
-  await fs.writeFile(jobsFilePath, JSON.stringify(jobs, null, 2), "utf-8");
+/**
+ * Ensure the local temp directory exists for multer uploads.
+ */
+export const ensureStorage = async (): Promise<void> => {
+  const tmpDir = path.resolve(process.cwd(), "tmp");
+  await fs.mkdir(tmpDir, { recursive: true });
 };

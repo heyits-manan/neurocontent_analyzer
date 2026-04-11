@@ -1,57 +1,66 @@
-import { v4 as uuidv4 } from "uuid";
-import { readJobs, writeJobs } from "../utils/storage";
+import { supabase } from "../utils/supabaseClient";
 import { Job, CreateJobInput } from "../types";
 
-export const createJob = async ({
-  filename,
-  originalName,
-  mimetype,
-  size,
-  videoPath,
-}: CreateJobInput): Promise<Job> => {
-  const jobs = await readJobs();
-
-  const job: Job = {
-    id: uuidv4(),
-    filename,
-    originalName,
-    mimetype,
-    size,
-    videoPath,
-    audioPath: null,
+export const createJob = async (input: CreateJobInput): Promise<Job> => {
+  const row: Record<string, unknown> = {
     status: "uploaded",
-    transcript: [],
-    results: null,
-    error: null,
-    createdAt: new Date().toISOString(),
-    processedAt: null,
+    video_storage_path: input.video_storage_path,
+    original_name: input.original_name,
+    mime_type: input.mime_type,
+    size_bytes: input.size_bytes,
   };
 
-  jobs[job.id] = job;
-  await writeJobs(jobs);
-  return job;
+  if (input.id) {
+    row.id = input.id;
+  }
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .insert(row)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create job: ${error.message}`);
+  }
+
+  return data as Job;
 };
 
 export const getJobById = async (jobId: string): Promise<Job | null> => {
-  const jobs = await readJobs();
-  return jobs[jobId] || null;
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("id", jobId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null;
+    }
+    throw new Error(`Failed to fetch job: ${error.message}`);
+  }
+
+  return data as Job;
 };
 
 export const updateJob = async (
   jobId: string,
-  updates: Partial<Job>
+  updates: Partial<Omit<Job, "id" | "created_at">>
 ): Promise<Job | null> => {
-  const jobs = await readJobs();
+  const { data, error } = await supabase
+    .from("jobs")
+    .update(updates)
+    .eq("id", jobId)
+    .select()
+    .single();
 
-  if (!jobs[jobId]) {
-    return null;
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null;
+    }
+    throw new Error(`Failed to update job: ${error.message}`);
   }
 
-  jobs[jobId] = {
-    ...jobs[jobId],
-    ...updates,
-  };
-
-  await writeJobs(jobs);
-  return jobs[jobId];
+  return data as Job;
 };

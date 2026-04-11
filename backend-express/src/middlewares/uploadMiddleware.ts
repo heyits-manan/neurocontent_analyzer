@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs/promises";
 import { Request } from "express";
 
-const uploadDir = process.env.UPLOAD_DIR || "uploads";
+const tmpDir = path.resolve(process.cwd(), "tmp");
 
 const storage = multer.diskStorage({
   destination: async (
@@ -11,9 +11,8 @@ const storage = multer.diskStorage({
     _file: Express.Multer.File,
     cb: (error: Error | null, destination: string) => void
   ) => {
-    const absoluteDir = path.resolve(process.cwd(), uploadDir);
-    await fs.mkdir(absoluteDir, { recursive: true });
-    cb(null, absoluteDir);
+    await fs.mkdir(tmpDir, { recursive: true });
+    cb(null, tmpDir);
   },
   filename: (
     _req: Request,

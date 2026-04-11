@@ -1,9 +1,9 @@
 import express from "express";
-import { uploadVideo } from "../controllers/uploadController";
+import { uploadVideoHandler } from "../controllers/uploadController";
 import { upload } from "../middlewares/uploadMiddleware";
 
 const router = express.Router();
 
-router.post("/upload", upload.single("video"), uploadVideo);
+router.post("/upload", upload.single("video"), uploadVideoHandler);
 
 export default router;
