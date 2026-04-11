@@ -4,7 +4,8 @@ from pydantic import BaseModel, Field
 
 
 class AnalyzeRequest(BaseModel):
-    video_path: str = Field(..., min_length=1)
+    job_id: str = Field(..., min_length=1)
+    video_url: str = Field(..., min_length=1)
 
 
 class TranscriptSegment(BaseModel):
@@ -25,8 +26,5 @@ class SegmentAnalysis(BaseModel):
 
 
 class AnalyzeResponse(BaseModel):
-    video_path: str
-    audio_path: str
-    transcript: List[TranscriptSegment]
-    segments: List[SegmentAnalysis]
-    summary: str
+    job_id: str
+    status: str

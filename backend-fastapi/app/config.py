@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
 
+    # Supabase
+    supabase_url: str = ""
+    supabase_service_role_key: str = ""
+    supabase_artifacts_bucket: str = "artifacts"
+
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parent.parent / ".env",
         env_file_encoding="utf-8",
