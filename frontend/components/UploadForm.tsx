@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { processVideo, uploadVideo } from "../lib/api";
+import { processVideo, uploadVideo, pollJobStatus } from "../lib/api";
 
 export default function UploadForm() {
   const router = useRouter();
@@ -41,11 +41,29 @@ export default function UploadForm() {
 
     try {
       setError("");
-      setStatus("Processing analysis...");
+      setStatus("Queuing analysis...");
       setIsProcessing(true);
+
+      // Trigger processing (returns immediately with queued status)
       await processVideo(jobId);
-      setStatus("Processing complete. Redirecting to results...");
-      router.push(`/results?jobId=${jobId}`);
+      setStatus("Analysis queued. Waiting for results...");
+
+      // Poll until completed or failed
+      const finalResult = await pollJobStatus(jobId, 3000, 200, (jobStatus) => {
+        if (jobStatus === "queued") {
+          setStatus("Analysis queued. Waiting for processing to start...");
+        } else if (jobStatus === "processing") {
+          setStatus("Analysis in progress. This may take a few minutes...");
+        }
+      });
+
+      if (finalResult.status === "completed") {
+        setStatus("Processing complete. Redirecting to results...");
+        router.push(`/results?jobId=${jobId}`);
+      } else if (finalResult.status === "failed") {
+        setError(finalResult.error || "Analysis failed");
+        setStatus("");
+      }
     } catch (processError: any) {
       setError(processError.message || "Processing error");
     } finally {

@@ -42,7 +42,7 @@ export default async function ResultsPage(props: {
           Segment feedback for your uploaded video.
         </h1>
         <p className="m-0 max-w-[60ch] text-muted text-lg leading-relaxed">
-          Review the mock output from the Whisper, TRIBE v2, heuristic feature
+          Review the output from the Whisper, TRIBE v2, heuristic feature
           extraction, and LLM summary pipeline.
         </p>
       </section>
@@ -60,30 +60,51 @@ export default async function ResultsPage(props: {
         <div className="bg-surface border border-border-card rounded-3xl p-6 md:p-8 shadow-custom backdrop-blur-md rounded-2xl px-4 py-3 bg-[#a436221a] text-[#8a281d]">{errorMessage}</div>
       ) : resultData ? (
         <div className="grid gap-5">
-          <div className="bg-surface border border-border-card rounded-3xl p-6 md:p-8 shadow-custom backdrop-blur-md">
-            <div className="grid gap-3">
-              <div className="flex gap-2 flex-wrap">
+          {/* Status badges */}
+          {(resultData.status === "queued" || resultData.status === "processing") ? (
+            <div className="bg-surface border border-border-card rounded-3xl p-6 md:p-8 shadow-custom backdrop-blur-md">
+              <div className="flex gap-2 flex-wrap mb-3">
                 <div className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Job ID: {resultData.job_id}</div>
                 <div className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Status: {resultData.status}</div>
-                {resultData.audio_path ? (
-                  <div className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Audio extracted</div>
-                ) : null}
               </div>
-              <p className="text-muted leading-relaxed m-0 mt-2">
-                {("summary" in resultData.results) ? resultData.results.summary : "No summary available yet."}
+              <p className="text-muted leading-relaxed m-0">
+                Your analysis is still being processed. Please refresh this page in a moment.
               </p>
             </div>
-          </div>
-
-          {resultData.video_filename ? (
-            <InteractiveViewer 
-              videoUrl={`http://localhost:5001/uploads/${resultData.video_filename}`}
-              segments={resultData.results?.segments || []}
-              transcript={resultData.transcript || []}
-            />
           ) : (
-            <p className="text-muted leading-relaxed mt-8">Video not available for interactive playback.</p>
+            <>
+              <div className="bg-surface border border-border-card rounded-3xl p-6 md:p-8 shadow-custom backdrop-blur-md">
+                <div className="grid gap-3">
+                  <div className="flex gap-2 flex-wrap">
+                    <div className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Job ID: {resultData.job_id}</div>
+                    <div className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Status: {resultData.status}</div>
+                    {resultData.audio_url ? (
+                      <div className="w-fit px-3 py-1.5 rounded-full bg-[#efe3d2] text-accentdark text-sm">Audio extracted</div>
+                    ) : null}
+                  </div>
+                  <p className="text-muted leading-relaxed m-0 mt-2">
+                    {("summary" in resultData.results) ? resultData.results.summary : "No summary available yet."}
+                  </p>
+                </div>
+              </div>
+
+              {resultData.video_url ? (
+                <InteractiveViewer 
+                  videoUrl={resultData.video_url}
+                  segments={resultData.results?.segments || []}
+                  transcript={resultData.transcript || []}
+                />
+              ) : (
+                <p className="text-muted leading-relaxed mt-8">Video not available for interactive playback.</p>
+              )}
+            </>
           )}
+
+          {resultData.status === "failed" && resultData.error ? (
+            <div className="rounded-2xl px-4 py-3 bg-[#a436221a] text-[#8a281d] leading-relaxed">
+              Analysis failed: {resultData.error}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </main>

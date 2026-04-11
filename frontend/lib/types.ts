@@ -16,8 +16,6 @@ export interface SegmentAnalysis {
 }
 
 export interface AnalysisResult {
-  video_path: string;
-  audio_path: string;
   transcript: TranscriptSegment[];
   segments: SegmentAnalysis[];
   summary: string;
@@ -25,10 +23,11 @@ export interface AnalysisResult {
 
 export interface JobResponse {
   job_id: string;
-  status: "uploaded" | "processing" | "completed" | "failed";
-  audio_path: string | null;
-  video_filename: string;
+  status: "uploaded" | "queued" | "processing" | "completed" | "failed";
+  video_url: string | null;
+  audio_url: string | null;
+  original_name: string;
   transcript: TranscriptSegment[];
-  results: AnalysisResult | { segments: SegmentAnalysis[] };
+  results: AnalysisResult | { segments: SegmentAnalysis[]; summary?: string };
   error: string | null;
 }
