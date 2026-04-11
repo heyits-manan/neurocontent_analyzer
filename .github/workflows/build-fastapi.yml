@@ -48,9 +48,18 @@ jobs:
         run: |
           EC2_PORT="${EC2_PORT:-22}"
           mkdir -p ~/.ssh
-          printf "%s" "$EC2_SSH_KEY" > ~/.ssh/ec2_key
+          printf "%s" "$EC2_SSH_KEY" | tr -d '\r' > ~/.ssh/ec2_key
           chmod 600 ~/.ssh/ec2_key
           ssh-keyscan -p "$EC2_PORT" -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+      - name: Validate SSH connection
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_PORT: ${{ secrets.EC2_PORT }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          EC2_PORT="${EC2_PORT:-22}"
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -i ~/.ssh/ec2_key -p "$EC2_PORT" "$EC2_USER@$EC2_HOST" "echo ssh-ok"
 
       - name: Deploy on EC2
         env:
@@ -66,15 +75,15 @@ jobs:
           EC2_PORT="${EC2_PORT:-22}"
           ssh -i ~/.ssh/ec2_key -p "$EC2_PORT" "$EC2_USER@$EC2_HOST" "
             set -e
-            docker pull $IMAGE_NAME:$IMAGE_TAG
-            docker rm -f $CONTAINER_NAME || true
+            sudo docker pull $IMAGE_NAME:$IMAGE_TAG
+            sudo docker rm -f $CONTAINER_NAME || true
 
             ENV_FILE_ARGS=''
             if [ -n \"$EC2_ENV_FILE\" ]; then
               ENV_FILE_ARGS=\"--env-file $EC2_ENV_FILE\"
             fi
 
-            docker run -d \
+            sudo docker run -d \
               --name $CONTAINER_NAME \
               --restart unless-stopped \
               -p $CONTAINER_PORT:8000 \
