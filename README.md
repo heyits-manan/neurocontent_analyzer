@@ -140,6 +140,37 @@ Frontend environment variables:
 - Express API: `http://localhost:5001`
 - FastAPI: `http://localhost:8000`
 
+## FastAPI Docker Deploy
+
+The repository includes a GitHub Actions workflow at `.github/workflows/build-fastapi.yml` that:
+
+- builds the FastAPI Docker image from `backend-fastapi/`
+- pushes `latest` and the commit SHA tag to Docker Hub
+- SSHes into your EC2 instance
+- pulls the newly built image
+- replaces the existing FastAPI container
+- starts it in detached mode with `--restart unless-stopped`
+
+Required GitHub repository secrets:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+- `EC2_HOST`
+- `EC2_USER`
+- `EC2_SSH_KEY`
+
+Optional GitHub repository secrets:
+
+- `EC2_PORT`: defaults to `22`
+- `EC2_ENV_FILE`: absolute path to an env file already present on the EC2 host, for example `/home/ubuntu/neurocontent-fastapi.env`
+
+Current deployment assumptions:
+
+- Docker is already installed on the EC2 instance
+- the SSH user can run Docker commands
+- the FastAPI container is published as `8000:8000`
+- any runtime secrets for FastAPI are stored in the EC2 env file if `EC2_ENV_FILE` is provided
+
 ## Usage
 
 1. Open the frontend.
