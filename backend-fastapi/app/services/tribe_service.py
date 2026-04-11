@@ -1,17 +1,24 @@
 import asyncio
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 import numpy as np
 
 from app.config import get_settings
+from app.services.tribe_events import build_video_events_dataframe
 
 
 _tribe_model = None
 
 
-async def score_segments(video_path: Path, segments: List[dict]) -> List[dict]:
-    tribe_metrics = await _predict_tribe_metrics(video_path, segments)
+async def extract_transcript_from_video(video_path: Path) -> tuple[list[dict], Any]:
+    events_df = await asyncio.to_thread(_get_video_events_dataframe, video_path)
+    transcript = _build_transcript_from_events(events_df)
+    return transcript, events_df
+
+
+async def score_segments(video_path: Path, segments: List[dict], events_df: Any = None) -> List[dict]:
+    tribe_metrics = await _predict_tribe_metrics(video_path, segments, events_df=events_df)
 
     scored_segments = []
     for index, segment in enumerate(segments):
@@ -62,24 +69,26 @@ def _classify_attention(segment: dict) -> str:
     return "high"
 
 
-async def _predict_tribe_metrics(video_path: Path, segments: List[dict]) -> List[dict]:
+async def _predict_tribe_metrics(video_path: Path, segments: List[dict], events_df: Any = None) -> List[dict]:
     settings = get_settings()
 
     if not settings.tribe_enabled:
         return []
 
     try:
-        return await asyncio.to_thread(_run_tribe_prediction, video_path, segments)
+        return await asyncio.to_thread(_run_tribe_prediction, video_path, segments, events_df)
     except Exception:
         return []
 
 
-def _run_tribe_prediction(video_path: Path, segments: List[dict]) -> List[dict]:
+def _run_tribe_prediction(video_path: Path, segments: List[dict], events_df: Any = None) -> List[dict]:
     model = _get_tribe_model()
     if model is None:
         return []
 
-    events_df = model.get_events_dataframe(video_path=str(video_path))
+    if events_df is None:
+        events_df = _get_video_events_dataframe(video_path)
+
     preds, tribe_segments = model.predict(events=events_df)
     preds_array = np.asarray(preds)
 
@@ -140,6 +149,73 @@ def _run_tribe_prediction(video_path: Path, segments: List[dict]) -> List[dict]:
         )
 
     return normalized_metrics
+
+
+def _get_video_events_dataframe(video_path: Path):
+    return build_video_events_dataframe(video_path)
+
+
+def _build_transcript_from_events(events_df: Any) -> list[dict]:
+    rows = _events_to_records(events_df)
+    transcript_segments = []
+
+    for row in rows:
+        text = str(row.get("text") or "").strip()
+        if not text:
+            continue
+
+        start = _coerce_float(
+            row.get("start"),
+            row.get("onset"),
+            row.get("t_start"),
+        )
+        duration = _coerce_float(row.get("duration"), default=0.0)
+        end = _coerce_float(
+            row.get("end"),
+            row.get("offset"),
+            row.get("t_end"),
+            default=start + duration,
+        )
+
+        if end <= start:
+            end = start + max(duration, 0.1)
+
+        transcript_segments.append(
+            {
+                "text": text,
+                "start": round(start, 2),
+                "end": round(end, 2),
+            }
+        )
+
+    return transcript_segments
+
+
+def _events_to_records(events_df: Any) -> list[dict]:
+    if events_df is None:
+        return []
+
+    if hasattr(events_df, "to_dict"):
+        try:
+            return events_df.to_dict("records")
+        except TypeError:
+            pass
+
+    if isinstance(events_df, list):
+        return [row for row in events_df if isinstance(row, dict)]
+
+    return []
+
+
+def _coerce_float(*values: Any, default: float = 0.0) -> float:
+    for value in values:
+        if value is None:
+            continue
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            continue
+    return default
 
 
 def _get_tribe_model():
