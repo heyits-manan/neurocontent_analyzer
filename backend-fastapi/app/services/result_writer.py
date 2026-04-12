@@ -1,4 +1,5 @@
 import logging
+import math
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -8,9 +9,22 @@ from app.supabase_client import supabase, ARTIFACTS_BUCKET
 logger = logging.getLogger(__name__)
 
 
+def _sanitize_for_json(obj: Any) -> Any:
+    """Recursively replace NaN/Inf floats with None (JSON doesn't support them)."""
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    if isinstance(obj, dict):
+        return {k: _sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_for_json(item) for item in obj]
+    return obj
+
+
 def update_job_status(job_id: str, status: str, **fields: Any) -> None:
     """Update a job row in Supabase Postgres."""
-    payload: Dict[str, Any] = {"status": status, **fields}
+    payload: Dict[str, Any] = _sanitize_for_json({"status": status, **fields})
 
     result = supabase.table("jobs").update(payload).eq("id", job_id).execute()
 
