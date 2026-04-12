@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 
@@ -6,12 +7,18 @@ MAX_WINDOW_WORDS = 120
 
 
 async def create_segments(transcript_segments: List[dict]) -> List[dict]:
-    if transcript_segments:
+    # Filter out segments with NaN start/end (can come from TRIBE events pipeline)
+    clean_segments = [
+        s for s in transcript_segments
+        if not math.isnan(s.get("start", 0)) and not math.isnan(s.get("end", 0))
+    ]
+
+    if clean_segments:
         grouped_segments = []
         current_window = []
-        current_start = transcript_segments[0]["start"]
+        current_start = clean_segments[0]["start"]
 
-        for transcript_segment in transcript_segments:
+        for transcript_segment in clean_segments:
             candidate_segments = current_window + [transcript_segment]
             candidate_start = current_start if current_window else transcript_segment["start"]
             candidate_end = transcript_segment["end"]
@@ -56,10 +63,20 @@ async def create_segments(transcript_segments: List[dict]) -> List[dict]:
     ]
 
 
+def _safe_int(value, fallback: int = 0) -> int:
+    """Convert a float to int, treating NaN/Inf as the fallback."""
+    try:
+        if math.isnan(value) or math.isinf(value):
+            return fallback
+        return int(round(value))
+    except (TypeError, ValueError):
+        return fallback
+
+
 def _build_segment_window(transcript_window: List[dict]) -> dict:
     text = " ".join(segment["text"].strip() for segment in transcript_window if segment["text"].strip())
-    start = int(transcript_window[0]["start"])
-    end = max(int(round(transcript_window[-1]["end"])), start + 1)
+    start = _safe_int(transcript_window[0]["start"], 0)
+    end = max(_safe_int(transcript_window[-1]["end"], start + 1), start + 1)
     duration = max(end - start, 1)
     word_count = len(text.split())
     sentence_count = max(_count_sentences(text), 1)
