@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import math
 import time
 from pathlib import Path
 from typing import Any, List
@@ -181,8 +182,16 @@ def _build_transcript_from_events(events_df: Any) -> list[dict]:
     transcript_segments = []
 
     for row in rows:
-        text = str(row.get("text") or "").strip()
-        if not text:
+        raw_text = row.get("text")
+
+        # Skip if text is None, float NaN, or the literal string "nan"
+        if raw_text is None:
+            continue
+        if isinstance(raw_text, float) and math.isnan(raw_text):
+            continue
+
+        text = str(raw_text).strip()
+        if not text or text.lower() == "nan":
             continue
 
         start = _coerce_float(
@@ -197,6 +206,10 @@ def _build_transcript_from_events(events_df: Any) -> list[dict]:
             row.get("t_end"),
             default=start + duration,
         )
+
+        # Skip entries with NaN timing
+        if math.isnan(start) or math.isnan(end):
+            continue
 
         if end <= start:
             end = start + max(duration, 0.1)
