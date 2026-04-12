@@ -179,36 +179,65 @@ def _get_video_events_dataframe(video_path: Path):
 
 def _build_transcript_from_events(events_df: Any) -> list[dict]:
     rows = _events_to_records(events_df)
-    transcript_segments = []
+    logger.info("[transcript] Total rows from events dataframe: %d", len(rows))
 
-    for row in rows:
+    # Log the first 5 rows to see raw data structure
+    for i, row in enumerate(rows[:5]):
+        logger.info("[transcript] Sample row %d: type=%s text=%r start=%s end=%s duration=%s",
+                     i, row.get("type"), row.get("text"), row.get("start"), row.get("end"), row.get("duration"))
+
+    # Log available event types
+    event_types = set(row.get("type") for row in rows)
+    logger.info("[transcript] Event types found: %s", event_types)
+
+    # Only use Word-type events for transcript (not Audio/Video/Text)
+    word_rows = [r for r in rows if r.get("type") == "Word"]
+    logger.info("[transcript] Word-type rows: %d (other types filtered out)", len(word_rows))
+
+    # If no Word rows, try using all rows with text as fallback
+    if not word_rows:
+        logger.warning("[transcript] No Word-type events found. Trying Sentence type...")
+        word_rows = [r for r in rows if r.get("type") == "Sentence"]
+        logger.info("[transcript] Sentence-type rows: %d", len(word_rows))
+
+    if not word_rows:
+        logger.warning("[transcript] No Word or Sentence events. Using all rows with text as fallback")
+        word_rows = rows
+
+    transcript_segments = []
+    skipped_nan_text = 0
+    skipped_nan_timing = 0
+
+    for row in word_rows:
         raw_text = row.get("text")
 
         # Skip if text is None, float NaN, or the literal string "nan"
         if raw_text is None:
+            skipped_nan_text += 1
             continue
         if isinstance(raw_text, float) and math.isnan(raw_text):
+            skipped_nan_text += 1
             continue
 
         text = str(raw_text).strip()
         if not text or text.lower() == "nan":
+            skipped_nan_text += 1
             continue
 
         start = _coerce_float(
             row.get("start"),
-            row.get("onset"),
             row.get("t_start"),
         )
         duration = _coerce_float(row.get("duration"), default=0.0)
         end = _coerce_float(
             row.get("end"),
-            row.get("offset"),
             row.get("t_end"),
             default=start + duration,
         )
 
         # Skip entries with NaN timing
         if math.isnan(start) or math.isnan(end):
+            skipped_nan_timing += 1
             continue
 
         if end <= start:
@@ -221,6 +250,13 @@ def _build_transcript_from_events(events_df: Any) -> list[dict]:
                 "end": round(end, 2),
             }
         )
+
+    logger.info("[transcript] Result: %d valid segments, %d skipped (nan text), %d skipped (nan timing)",
+                len(transcript_segments), skipped_nan_text, skipped_nan_timing)
+
+    # Log first 3 valid segments
+    for i, seg in enumerate(transcript_segments[:3]):
+        logger.info("[transcript] Segment %d: %.2f-%.2f %r", i, seg["start"], seg["end"], seg["text"][:60])
 
     return transcript_segments
 
