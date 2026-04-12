@@ -77,6 +77,8 @@ jobs:
             set -e
             sudo docker pull $IMAGE_NAME:$IMAGE_TAG
             sudo docker rm -f $CONTAINER_NAME || true
+            sudo mkdir -p /opt/neurocontent/models/huggingface
+            sudo mkdir -p /opt/neurocontent/models/tribe
 
             ENV_FILE_ARGS=''
             if [ -n \"$EC2_ENV_FILE\" ]; then
@@ -87,6 +89,8 @@ jobs:
               --name $CONTAINER_NAME \
               --restart unless-stopped \
               -p $CONTAINER_PORT:8000 \
+              -v /opt/neurocontent/models/huggingface:/root/.cache/huggingface \
+              -v /opt/neurocontent/models/tribe:/app/cache \
               \$ENV_FILE_ARGS \
               $IMAGE_NAME:$IMAGE_TAG
           "
