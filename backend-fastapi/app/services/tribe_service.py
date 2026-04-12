@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import time
 from pathlib import Path
 from typing import Any, List
 
@@ -7,13 +9,18 @@ import numpy as np
 from app.config import get_settings
 from app.services.tribe_events import build_video_events_dataframe
 
+logger = logging.getLogger(__name__)
 
 _tribe_model = None
 
 
 async def extract_transcript_from_video(video_path: Path) -> tuple[list[dict], Any]:
+    logger.info("[extract_transcript] Building events dataframe (audio extraction + whisper)...")
+    t0 = time.monotonic()
     events_df = await asyncio.to_thread(_get_video_events_dataframe, video_path)
+    logger.info("[extract_transcript] Events dataframe built in %.1fs", time.monotonic() - t0)
     transcript = _build_transcript_from_events(events_df)
+    logger.info("[extract_transcript] Extracted %d transcript segments", len(transcript))
     return transcript, events_df
 
 
@@ -73,23 +80,37 @@ async def _predict_tribe_metrics(video_path: Path, segments: List[dict], events_
     settings = get_settings()
 
     if not settings.tribe_enabled:
+        logger.info("[tribe] TRIBE is disabled, skipping predictions")
         return []
 
     try:
-        return await asyncio.to_thread(_run_tribe_prediction, video_path, segments, events_df)
-    except Exception:
+        logger.info("[tribe] Starting TRIBE prediction for %d segments...", len(segments))
+        t0 = time.monotonic()
+        result = await asyncio.to_thread(_run_tribe_prediction, video_path, segments, events_df)
+        logger.info("[tribe] TRIBE prediction complete in %.1fs, got %d metrics", time.monotonic() - t0, len(result))
+        return result
+    except Exception as exc:
+        logger.exception("[tribe] TRIBE prediction failed: %s", exc)
         return []
 
 
 def _run_tribe_prediction(video_path: Path, segments: List[dict], events_df: Any = None) -> List[dict]:
+    logger.info("[tribe] Loading TRIBE model...")
+    t0 = time.monotonic()
     model = _get_tribe_model()
     if model is None:
+        logger.warning("[tribe] TRIBE model could not be loaded, returning empty")
         return []
+    logger.info("[tribe] Model loaded in %.1fs", time.monotonic() - t0)
 
     if events_df is None:
+        logger.info("[tribe] Building events dataframe (no cached version)...")
         events_df = _get_video_events_dataframe(video_path)
 
+    logger.info("[tribe] Running model.predict()...")
+    t1 = time.monotonic()
     preds, tribe_segments = model.predict(events=events_df)
+    logger.info("[tribe] model.predict() finished in %.1fs", time.monotonic() - t1)
     preds_array = np.asarray(preds)
 
     if preds_array.ndim != 2 or preds_array.shape[0] == 0:
@@ -222,6 +243,7 @@ def _get_tribe_model():
     global _tribe_model
 
     if _tribe_model is not None:
+        logger.info("[tribe] Using cached TRIBE model")
         return _tribe_model
 
     try:
@@ -230,13 +252,17 @@ def _get_tribe_model():
         try:
             from tribev2 import TribeModel
         except ImportError:
+            logger.error("[tribe] tribev2 is not installed, TRIBE scoring disabled")
             return None
 
     settings = get_settings()
+    logger.info("[tribe] Loading TribeModel.from_pretrained(%s, cache=%s)...", settings.tribe_model_id, settings.tribe_cache_dir)
+    t0 = time.monotonic()
     _tribe_model = TribeModel.from_pretrained(
         settings.tribe_model_id,
         cache_folder=settings.tribe_cache_dir,
     )
+    logger.info("[tribe] TribeModel loaded in %.1fs", time.monotonic() - t0)
     return _tribe_model
 
 
